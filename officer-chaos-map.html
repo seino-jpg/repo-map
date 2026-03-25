@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>AI役員 カオスマップ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #e6edf3; overflow: hidden; }
+
+#header { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: rgba(13,17,23,0.95); border-bottom: 1px solid #21262d; display: flex; align-items: center; padding: 0 20px; gap: 16px; z-index: 100; backdrop-filter: blur(8px); }
+#header h1 { font-size: 14px; font-weight: 600; white-space: nowrap; }
+#header p { font-size: 11px; color: #484f58; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-left: auto; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8b949e; white-space: nowrap; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend-rect { width: 10px; height: 8px; border-radius: 2px; }
+.legend-sep { width: 1px; height: 14px; background: #21262d; }
+
+#canvas { position: fixed; top: 52px; left: 0; right: 0; bottom: 0; }
+
+/* Tooltip */
+#tooltip {
+  position: fixed;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 11px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+  max-width: 300px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+#tooltip.show { opacity: 1; }
+#tooltip .tt-id { font-size: 13px; font-weight: 700; color: #e6edf3; margin-bottom: 2px; font-family: "SF Mono", monospace; }
+#tooltip .tt-title { font-size: 11px; color: #8b949e; margin-bottom: 10px; }
+#tooltip .tt-section { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; margin-top: 8px; }
+#tooltip .tt-link { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px solid #21262d; align-items: flex-start; }
+#tooltip .tt-link:last-child { border-bottom: none; }
+#tooltip .tt-link-target { font-family: "SF Mono", monospace; font-size: 10px; color: #bc8cff; white-space: nowrap; flex-shrink: 0; padding-top: 1px; }
+#tooltip .tt-link-target.tool { color: #58a6ff; }
+#tooltip .tt-link-action { font-size: 11px; color: #c9d1d9; line-height: 1.4; }
+
+#hint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #484f58; background: rgba(13,17,23,0.8); padding: 6px 12px; border-radius: 20px; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>AI役員 カオスマップ</h1>
+  <p>ノードをホバー → 詳細 / ドラッグ → 移動 / スクロール → ズーム</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>経営・戦略</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>CS業務</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>人事・組織</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div>営業・セールス</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>システム・TS</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b949e"></div>個人支援</div>
+    <div class="legend-sep"></div>
+    <div class="legend-item"><div class="legend-rect" style="background:#ffa64d"></div>リポジトリ</div>
+    <div class="legend-item"><div class="legend-rect" style="background:#58a6ff; border-radius:50%"></div>ツール・サービス</div>
+  </div>
+</div>
+
+<svg id="canvas"></svg>
+<div id="tooltip"></div>
+<div id="hint">ノードにホバーすると詳細が表示されます</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const agents = [
+  // 経営・戦略
+  { id:"board",  name:"board",  title:"オーケストレーター",       cat:"経営・戦略", color:"#f97316" },
+  { id:"caio",   name:"caio",   title:"Chief AI Officer",         cat:"経営・戦略", color:"#f97316" },
+  { id:"cao",    name:"cao",    title:"最高アライアンス責任者",    cat:"経営・戦略", color:"#f97316" },
+  { id:"cfo",    name:"cfo",    title:"最高財務責任者",           cat:"経営・戦略", color:"#f97316" },
+  { id:"cmo",    name:"cmo",    title:"最高マーケティング責任者",  cat:"経営・戦略", color:"#f97316" },
+  { id:"coo",    name:"coo",    title:"最高執行責任者",           cat:"経営・戦略", color:"#f97316" },
+  { id:"cpo",    name:"cpo",    title:"最高プロダクト責任者",     cat:"経営・戦略", color:"#f97316" },
+  { id:"cro",    name:"cro",    title:"最高収益責任者",           cat:"経営・戦略", color:"#f97316" },
+  { id:"cso",    name:"cso",    title:"最高戦略責任者",           cat:"経営・戦略", color:"#f97316" },
+  // CS業務
+  { id:"adoption",   name:"adoption",   title:"アダプション責任者",         cat:"CS業務", color:"#3b82f6" },
+  { id:"cca",        name:"cca",        title:"最高顧客アカウント責任者",    cat:"CS業務", color:"#3b82f6" },
+  { id:"cem",        name:"cem",        title:"Customer Education Manager",  cat:"CS業務", color:"#3b82f6" },
+  { id:"csm",        name:"csm",        title:"チーフスクラムマスター",      cat:"CS業務", color:"#3b82f6" },
+  { id:"cdo",        name:"cdo",        title:"最高データ責任者",            cat:"CS業務", color:"#3b82f6" },
+  { id:"cxo",        name:"cxo",        title:"最高体験責任者",              cat:"CS業務", color:"#3b82f6" },
+  { id:"eas",        name:"eas",        title:"Enterprise Account Success",  cat:"CS業務", color:"#3b82f6" },
+  { id:"em",         name:"em",         title:"Escalation Manager",          cat:"CS業務", color:"#3b82f6" },
+  { id:"onboarding", name:"onboarding", title:"OB責任者",                    cat:"CS業務", color:"#3b82f6" },
+  // 人事・組織
+  { id:"chro", name:"chro", title:"最高人事責任者",           cat:"人事・組織", color:"#22c55e" },
+  { id:"dkm",  name:"dkm",  title:"Domain Knowledge Manager", cat:"人事・組織", color:"#22c55e" },
+  { id:"es",   name:"es",   title:"Employee Success Manager", cat:"人事・組織", color:"#22c55e" },
+  { id:"iom",  name:"iom",  title:"Internal Onboarding Mgr",  cat:"人事・組織", color:"#22c55e" },
+  { id:"ta",   name:"ta",   title:"Talent Acquisition",       cat:"人事・組織", color:"#22c55e" },
+  { id:"wpm",  name:"wpm",  title:"Work Practice Manager",    cat:"人事・組織", color:"#22c55e" },
+  // 営業・セールス
+  { id:"bsm", name:"bsm", title:"Back Sales Sprint Manager", cat:"営業・セールス", color:"#eab308" },
+  { id:"fsm", name:"fsm", title:"Front Sales Manager",       cat:"営業・セールス", color:"#eab308" },
+  { id:"som", name:"som", title:"System Operations Manager", cat:"営業・セールス", color:"#eab308" },
+  // システム・TS
+  { id:"cto",  name:"cto",  title:"Chief Technology Officer", cat:"システム・TS", color:"#a855f7" },
+  { id:"engm", name:"engm", title:"Engineering Manager",      cat:"システム・TS", color:"#a855f7" },
+  { id:"tsm",  name:"tsm",  title:"TSチーム運営責任者",        cat:"システム・TS", color:"#a855f7" },
+  // 個人支援
+  { id:"pom", name:"pom", title:"Personal Operations Manager", cat:"個人支援", color:"#8b949e" },
+];
+
+const resources = [
+  // リポジトリ
+  { id:"cs-ai-officers",   name:"cs-ai-officers",   type:"repo", color:"#bc8cff", desc:"全役員の自己定義・共通基盤" },
+  { id:"gas-kpi-cs",       name:"gas-kpi-cs",       type:"repo", color:"#ffa64d", desc:"KPI・解約分析・MRRデータ" },
+  { id:"sprint-management",name:"sprint-management", type:"repo", color:"#fb7185", desc:"スプリントドキュメント・SOP" },
+  { id:"claude-skills",    name:"claude-skills",    type:"repo", color:"#fb7185", desc:"スキル（/コマンド）定義" },
+  { id:"claude-config",    name:"claude-config",    type:"repo", color:"#c084fc", desc:"設定・引継書管理" },
+  { id:"work-style-guide", name:"work-style-guide", type:"repo", color:"#fbbf24", desc:"仕事の進め方ガイド原本" },
+  // ツール・サービス
+  { id:"Notion",    name:"Notion",           type:"tool", color:"#e6edf3", desc:"ドキュメント・DB管理（全員）" },
+  { id:"Slack",     name:"Slack",            type:"tool", color:"#e8834d", desc:"チームコミュニケーション（全員）" },
+  { id:"Linear",    name:"Linear",           type:"tool", color:"#5e6ad2", desc:"タスク・課題管理" },
+  { id:"GCal",      name:"Google Calendar",  type:"tool", color:"#34d399", desc:"スケジュール・イベント管理" },
+  { id:"WebSearch", name:"Web 検索",         type:"tool", color:"#94a3b8", desc:"外部情報・競合・市場調査" },
+];
+
+const links = [
+  // 全員共通 → cs-ai-officers (軽く)
+  ...agents.map(a => ({ source: a.id, target: "cs-ai-officers", action: "自己定義・ロール参照", weight: 0.3 })),
+  // 全員共通 → Notion
+  ...agents.map(a => ({ source: a.id, target: "Notion", action: "ドキュメント読み書き・DB更新", weight: 0.3 })),
+  // 全員共通 → Slack
+  ...agents.filter(a => a.id !== "iom" && a.id !== "es").map(a => ({ source: a.id, target: "Slack", action: "メッセージ送信・下書き", weight: 0.3 })),
+  { source:"iom", target:"Slack", action:"新入社員へのコミュニケーション", weight:0.5 },
+  { source:"es",  target:"Slack", action:"メンバーへのフォローアップ送信", weight:0.5 },
+
+  // gas-kpi-cs
+  { source:"cfo",      target:"gas-kpi-cs", action:"MRR/ARR・コホート分析・LTV計算データ参照", weight:1 },
+  { source:"cmo",      target:"gas-kpi-cs", action:"顧客セグメント・マーケデータ参照", weight:1 },
+  { source:"coo",      target:"gas-kpi-cs", action:"業務KPI・GASデータ参照", weight:1 },
+  { source:"cro",      target:"gas-kpi-cs", action:"アップセル候補・Expansion MRR追跡", weight:1 },
+  { source:"cso",      target:"gas-kpi-cs", action:"内部KPIデータ参照・戦略分析", weight:1 },
+  { source:"cxo",      target:"gas-kpi-cs", action:"OBファネル・Time-to-Valueデータ参照", weight:1 },
+  { source:"adoption", target:"gas-kpi-cs", action:"ヘルスマトリクス・機能活用率データ参照", weight:1 },
+  { source:"cca",      target:"gas-kpi-cs", action:"契約・アカウント・プランデータ参照", weight:1 },
+  { source:"cem",      target:"gas-kpi-cs", action:"顧客教育KPI・活用率データ参照", weight:1 },
+  { source:"cdo",      target:"gas-kpi-cs", action:"解約分析・チャーン予測・KPIサマリー生成", weight:1 },
+  { source:"eas",      target:"gas-kpi-cs", action:"エンプラ顧客KPI・契約データ参照", weight:1 },
+  { source:"onboarding",target:"gas-kpi-cs",action:"OB進捗・TTV・定着率データ参照", weight:1 },
+  { source:"som",      target:"gas-kpi-cs", action:"導入作業KPI・初期設定データ参照", weight:1 },
+  { source:"tsm",      target:"gas-kpi-cs", action:"TSチームKPI・チケット量データ参照", weight:1 },
+  { source:"cto",      target:"gas-kpi-cs", action:"CSツールKPIデータ・GAS設計参照", weight:1 },
+
+  // Linear
+  { source:"caio", target:"Linear", action:"AI活用タスク・プロジェクト参照", weight:1 },
+  { source:"cao",  target:"Linear", action:"アライアンス関連課題参照", weight:1 },
+  { source:"cca",  target:"Linear", action:"契約関連課題・変更リクエスト参照", weight:1 },
+  { source:"cpo",  target:"Linear", action:"開発要望の収集・優先順位付け", weight:1 },
+  { source:"eas",  target:"Linear", action:"エンプラ対応チケット参照・管理", weight:1 },
+  { source:"em",   target:"Linear", action:"エスカレーション案件チケット参照", weight:1 },
+  { source:"engm", target:"Linear", action:"開発進捗・技術課題・リリース管理", weight:1 },
+  { source:"som",  target:"Linear", action:"導入作業チケット・初期設定タスク管理", weight:1 },
+  { source:"tsm",  target:"Linear", action:"サポートチケット管理・SLA監視", weight:1 },
+  { source:"cto",  target:"Linear", action:"リポジトリ課題・CI/CD・開発タスク管理", weight:1 },
+
+  // Google Calendar
+  { source:"bsm", target:"GCal", action:"スプリントイベント・週次MTG確認", weight:1 },
+  { source:"csm", target:"GCal", action:"スプリントセレモニー・会議スケジュール確認", weight:1 },
+  { source:"fsm", target:"GCal", action:"商談スケジュール・面談管理", weight:1 },
+  { source:"pom", target:"GCal", action:"デイリー/ウィークリー予定参照・PDCA管理", weight:1 },
+  { source:"ta",  target:"GCal", action:"面接スケジュール作成・調整", weight:1 },
+
+  // WebSearch
+  { source:"caio",    target:"WebSearch", action:"AI最新動向・外部事例調査", weight:1 },
+  { source:"cao",     target:"WebSearch", action:"パートナー候補・業界動向調査", weight:1 },
+  { source:"cro",     target:"WebSearch", action:"競合事例・アップセル戦略情報収集", weight:1 },
+  { source:"cso",     target:"WebSearch", action:"競合・市場・業界トレンド調査", weight:1 },
+  { source:"cto",     target:"WebSearch", action:"技術情報・OSS・セキュリティ動向調査", weight:1 },
+  { source:"dkm",     target:"WebSearch", action:"リユース業界知識・業務ベストプラクティス調査", weight:1 },
+  { source:"eas",     target:"WebSearch", action:"エンプラ顧客企業・業界調査", weight:1 },
+  { source:"wpm",     target:"WebSearch", action:"外部ベストプラクティス・仕事術調査", weight:1 },
+  { source:"ta",      target:"WebSearch", action:"採用市場・競合他社の採用状況調査", weight:1 },
+
+  // sprint-management
+  { source:"csm", target:"sprint-management", action:"スプリントドキュメント・SOP・概要参照", weight:1.5 },
+
+  // claude-skills
+  { source:"csm", target:"claude-skills", action:"スプリント関連スキル・コマンド一覧参照", weight:1.5 },
+
+  // claude-config
+  { source:"cto", target:"claude-config", action:"設定ファイル・引継書管理・CI/CD設定", weight:1.5 },
+
+  // work-style-guide
+  { source:"wpm", target:"work-style-guide", action:"仕事の進め方ガイド原本の管理・更新・Pull Request", weight:1.5 },
+];
+
+// ============ D3 Setup ============
+const svg = d3.select("#canvas");
+const width = window.innerWidth;
+const height = window.innerHeight - 52;
+svg.attr("width", width).attr("height", height);
+
+const g = svg.append("g");
+
+// Zoom
+const zoom = d3.zoom()
+  .scaleExtent([0.2, 3])
+  .on("zoom", e => g.attr("transform", e.transform));
+svg.call(zoom);
+
+// Nodes
+const nodes = [
+  ...agents.map(a => ({ ...a, nodeType:"agent", r: 18 })),
+  ...resources.map(r => ({ ...r, nodeType:"resource", r: r.id === "Notion" || r.id === "Slack" || r.id === "cs-ai-officers" ? 28 : 22 }))
+];
+
+// Build adjacency for highlight
+const adj = {};
+links.forEach(l => {
+  if (!adj[l.source]) adj[l.source] = new Set();
+  if (!adj[l.target]) adj[l.target] = new Set();
+  adj[l.source].add(l.target);
+  adj[l.target].add(l.source);
+});
+
+// Simulation
+const sim = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+    if (d.weight <= 0.3) return 120;
+    if (d.weight >= 1.5) return 80;
+    return 140;
+  }).strength(d => d.weight * 0.3))
+  .force("charge", d3.forceManyBody().strength(-280))
+  .force("center", d3.forceCenter(width/2, height/2))
+  .force("collide", d3.forceCollide(d => d.r + 10))
+  .alphaDecay(0.02);
+
+// Draw links
+const linkSel = g.append("g").attr("class","links")
+  .selectAll("line")
+  .data(links)
+  .enter().append("line")
+  .attr("stroke", d => d.weight <= 0.3 ? "#1c2128" : "#30363d")
+  .attr("stroke-width", d => d.weight <= 0.3 ? 0.5 : 1)
+  .attr("stroke-opacity", d => d.weight <= 0.3 ? 0.4 : 0.6)
+  .attr("id", (d,i) => `link-${i}`);
+
+// Draw nodes
+const nodeSel = g.append("g").attr("class","nodes")
+  .selectAll("g")
+  .data(nodes)
+  .enter().append("g")
+  .attr("class","node")
+  .style("cursor","pointer")
+  .call(d3.drag()
+    .on("start", (e,d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+    .on("drag",  (e,d) => { d.fx=e.x; d.fy=e.y; })
+    .on("end",   (e,d) => { if (!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; })
+  );
+
+// Circle or rect based on type
+nodeSel.each(function(d) {
+  const el = d3.select(this);
+  if (d.nodeType === "agent") {
+    el.append("circle")
+      .attr("r", d.r)
+      .attr("fill", d.color)
+      .attr("fill-opacity", 0.2)
+      .attr("stroke", d.color)
+      .attr("stroke-width", 1.5);
+  } else {
+    const w = d.id === "Notion" || d.id === "Slack" || d.id === "cs-ai-officers" ? 60 : 52;
+    const h = d.id === "Notion" || d.id === "Slack" || d.id === "cs-ai-officers" ? 26 : 22;
+    el.append("rect")
+      .attr("x", -w/2).attr("y", -h/2)
+      .attr("width", w).attr("height", h)
+      .attr("rx", d.type === "tool" ? 11 : 5)
+      .attr("fill", d.color)
+      .attr("fill-opacity", 0.15)
+      .attr("stroke", d.color)
+      .attr("stroke-width", 1.5);
+  }
+});
+
+// Labels
+nodeSel.append("text")
+  .text(d => d.name)
+  .attr("text-anchor","middle")
+  .attr("dy","0.35em")
+  .attr("fill", d => d.nodeType === "agent" ? d.color : d.color)
+  .attr("font-size", d => {
+    if (d.id === "Notion" || d.id === "Slack" || d.id === "cs-ai-officers") return "9px";
+    if (d.nodeType === "resource") return "9px";
+    return "10px";
+  })
+  .attr("font-family", '"SF Mono", "Fira Code", monospace')
+  .attr("font-weight", d => d.nodeType === "resource" ? "600" : "500")
+  .style("pointer-events","none")
+  .style("user-select","none");
+
+// Tooltip
+const tooltip = document.getElementById("tooltip");
+
+function agentLinks(agentId) {
+  return links.filter(l => (l.source.id || l.source) === agentId && l.weight > 0.3);
+}
+
+nodeSel
+  .on("mouseover", function(e, d) {
+    const connected = adj[d.id] || new Set();
+
+    // Dim unrelated
+    nodeSel.select("circle,rect")
+      .attr("fill-opacity", n => n.id === d.id || connected.has(n.id) ? 0.3 : 0.05)
+      .attr("stroke-opacity", n => n.id === d.id || connected.has(n.id) ? 1 : 0.15);
+    nodeSel.select("text")
+      .attr("fill-opacity", n => n.id === d.id || connected.has(n.id) ? 1 : 0.15);
+    linkSel
+      .attr("stroke-opacity", l => {
+        const s = l.source.id || l.source;
+        const t = l.target.id || l.target;
+        return (s === d.id || t === d.id) && l.weight > 0.3 ? 0.9 : 0.05;
+      })
+      .attr("stroke", l => {
+        const s = l.source.id || l.source;
+        const t = l.target.id || l.target;
+        if ((s === d.id || t === d.id) && l.weight > 0.3) {
+          const agentNode = nodes.find(n => n.id === s && n.nodeType === "agent");
+          return agentNode ? agentNode.color : "#58a6ff";
+        }
+        return "#1c2128";
+      })
+      .attr("stroke-width", l => {
+        const s = l.source.id || l.source;
+        const t = l.target.id || l.target;
+        return (s === d.id || t === d.id) && l.weight > 0.3 ? 2 : 0.5;
+      });
+
+    // Build tooltip
+    let html = `<div class="tt-id">${d.name}</div>`;
+    html += `<div class="tt-title">${d.title || d.desc || ""}</div>`;
+
+    if (d.nodeType === "agent") {
+      const myLinks = agentLinks(d.id);
+      if (myLinks.length > 0) {
+        html += `<div class="tt-section">参照リポジトリ・ツール</div>`;
+        myLinks.forEach(l => {
+          const targetId = l.target.id || l.target;
+          const res = resources.find(r => r.id === targetId);
+          const cls = res && res.type === "tool" ? "tool" : "";
+          html += `<div class="tt-link"><span class="tt-link-target ${cls}">${targetId}</span><span class="tt-link-action">${l.action}</span></div>`;
+        });
+      }
+      // Universal ones
+      html += `<div class="tt-section">共通（全役員）</div>`;
+      html += `<div class="tt-link"><span class="tt-link-target">cs-ai-officers</span><span class="tt-link-action">自己定義・ロール参照</span></div>`;
+      html += `<div class="tt-link"><span class="tt-link-target tool">Notion</span><span class="tt-link-action">ドキュメント読み書き・DB更新</span></div>`;
+      html += `<div class="tt-link"><span class="tt-link-target tool">Slack</span><span class="tt-link-action">メッセージ送信・下書き</span></div>`;
+    } else {
+      // Resource: show who uses it
+      const users = links.filter(l => {
+        const t = l.target.id || l.target;
+        return t === d.id && l.weight > 0.3;
+      });
+      if (users.length > 0) {
+        html += `<div class="tt-section">参照している役員</div>`;
+        users.forEach(l => {
+          const sid = l.source.id || l.source;
+          const ag = agents.find(a => a.id === sid);
+          html += `<div class="tt-link"><span class="tt-link-target" style="color:${ag ? ag.color : '#8b949e'}">${sid}</span><span class="tt-link-action">${l.action}</span></div>`;
+        });
+      }
+    }
+
+    tooltip.innerHTML = html;
+    tooltip.classList.add("show");
+    moveTip(e);
+  })
+  .on("mousemove", moveTip)
+  .on("mouseout", function() {
+    nodeSel.select("circle,rect")
+      .attr("fill-opacity", 0.2)
+      .attr("stroke-opacity", 1);
+    nodeSel.select("text").attr("fill-opacity", 1);
+    linkSel
+      .attr("stroke", d => d.weight <= 0.3 ? "#1c2128" : "#30363d")
+      .attr("stroke-width", d => d.weight <= 0.3 ? 0.5 : 1)
+      .attr("stroke-opacity", d => d.weight <= 0.3 ? 0.4 : 0.6);
+    tooltip.classList.remove("show");
+  });
+
+function moveTip(e) {
+  const x = e.clientX + 16;
+  const y = e.clientY - 10;
+  const tw = 300;
+  const th = tooltip.offsetHeight || 200;
+  tooltip.style.left = (x + tw > window.innerWidth ? x - tw - 32 : x) + "px";
+  tooltip.style.top  = (y + th > window.innerHeight ? y - th : y) + "px";
+}
+
+// Tick
+sim.on("tick", () => {
+  linkSel
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+  nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// Resize
+window.addEventListener("resize", () => {
+  svg.attr("width", window.innerWidth).attr("height", window.innerHeight - 52);
+  sim.force("center", d3.forceCenter(window.innerWidth/2, (window.innerHeight-52)/2));
+  sim.alpha(0.1).restart();
+});
+</script>
+</body>
+</html>

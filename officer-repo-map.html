@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>AI役員 × リポジトリ関係図</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #e6edf3; padding: 24px; }
+h1 { font-size: 16px; color: #8b949e; margin-bottom: 6px; font-weight: 400; }
+h1 span { color: #e6edf3; font-weight: 600; }
+.subtitle { font-size: 12px; color: #484f58; margin-bottom: 20px; }
+
+/* Legend */
+.legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8b949e; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend-rect { width: 12px; height: 10px; border-radius: 2px; }
+.legend-sep { width: 1px; height: 16px; background: #21262d; }
+
+/* Main layout */
+.container { display: flex; gap: 0; }
+
+/* Agent panel */
+.agent-panel { flex-shrink: 0; width: 200px; }
+.agent-group { margin-bottom: 2px; }
+.group-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 8px 4px; }
+.agent-row { height: 28px; display: flex; align-items: center; padding: 0 8px; gap: 6px; border-radius: 4px 0 0 4px; cursor: pointer; transition: background 0.1s; }
+.agent-row:hover { background: rgba(255,255,255,0.05); }
+.agent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.agent-name { font-size: 11px; font-family: "SF Mono", monospace; color: #8b949e; }
+.agent-title { font-size: 10px; color: #484f58; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Matrix */
+.matrix-container { flex: 1; overflow-x: auto; }
+.matrix { border-collapse: collapse; }
+.col-header { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-size: 10px; color: #8b949e; padding: 8px 4px; text-align: left; white-space: nowrap; height: 100px; vertical-align: bottom; }
+.col-header.repo { color: #bc8cff; }
+.col-header.tool { color: #58a6ff; }
+.col-header.universal { color: #3fb950; }
+
+.matrix-row { height: 28px; }
+.matrix-row:hover td { background: rgba(255,255,255,0.03); }
+.matrix-row:hover td.filled { filter: brightness(1.3); }
+
+td.cell { width: 28px; text-align: center; border-left: 1px solid #161b22; }
+.group-gap td { border-top: 2px solid #21262d; }
+
+.dot-fill { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot-empty { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: transparent; border: 1px solid #21262d; }
+
+/* Repo/tool dot colors */
+.repo-gas { background: #ffa64d; }
+.repo-sprint { background: #ff6384; }
+.repo-skills { background: #ff6384; }
+.repo-config { background: #bc8cff; }
+.repo-workstyle { background: #ffd700; }
+.repo-recoreknow { background: #3fb950; }
+.tool-linear { background: #58a6ff; }
+.tool-gcal { background: #34d399; }
+.tool-web { background: #f1f0ff; }
+.tool-notion { background: #e6edf3; opacity: 0.7; }
+.tool-slack { background: #e8834d; }
+
+/* Tooltip */
+.tooltip { position: fixed; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; max-width: 260px; }
+.tooltip.show { opacity: 1; }
+.tooltip strong { color: #e6edf3; display: block; margin-bottom: 4px; }
+.tooltip span { color: #8b949e; }
+
+/* Highlight row/col */
+.highlight-col { background: rgba(88,166,255,0.05) !important; }
+</style>
+</head>
+<body>
+
+<h1>AI役員 × <span>リポジトリ・ツール関係図</span></h1>
+<p class="subtitle">各AI役員がどのリポジトリ・外部ツールを参照して仕事をするか</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>経営・戦略</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>CS業務</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>人事・組織</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div>営業・セールス</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>システム・TS</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8b949e"></div>個人支援</div>
+  <div class="legend-sep"></div>
+  <div class="legend-item"><div class="legend-rect" style="background:#21262d; border:1px solid #30363d;"></div>全員共通（Notion・Slack・cs-ai-officers）は省略</div>
+</div>
+
+<div class="container">
+  <div class="agent-panel">
+    <div style="height:100px;"></div>
+    <!-- 経営・戦略 -->
+    <div class="agent-group">
+      <div class="group-label">経営・戦略</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">board</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">caio</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cao</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cfo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cmo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">coo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cpo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cro</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cso</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#f97316"></div><div><div class="agent-name">cxo</div></div></div>
+    </div>
+    <!-- CS業務 -->
+    <div class="agent-group">
+      <div class="group-label">CS業務</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">adoption</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">cca</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">cem</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">csm</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">cdo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">cxo</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">eas</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">em</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#3b82f6"></div><div><div class="agent-name">onboarding</div></div></div>
+    </div>
+    <!-- 人事・組織 -->
+    <div class="agent-group">
+      <div class="group-label">人事・組織</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">chro</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">dkm</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">es</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">iom</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">ta</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#22c55e"></div><div><div class="agent-name">wpm</div></div></div>
+    </div>
+    <!-- 営業 -->
+    <div class="agent-group">
+      <div class="group-label">営業・セールス</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#eab308"></div><div><div class="agent-name">bsm</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#eab308"></div><div><div class="agent-name">fsm</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#eab308"></div><div><div class="agent-name">som</div></div></div>
+    </div>
+    <!-- システム・TS -->
+    <div class="agent-group">
+      <div class="group-label">システム・TS</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#a855f7"></div><div><div class="agent-name">cto</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#a855f7"></div><div><div class="agent-name">engm</div></div></div>
+      <div class="agent-row"><div class="agent-dot" style="background:#a855f7"></div><div><div class="agent-name">tsm</div></div></div>
+    </div>
+    <!-- 個人支援 -->
+    <div class="agent-group">
+      <div class="group-label">個人支援</div>
+      <div class="agent-row"><div class="agent-dot" style="background:#8b949e"></div><div><div class="agent-name">pom</div></div></div>
+    </div>
+  </div>
+
+  <div class="matrix-container">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <!-- Repos -->
+          <th class="col-header repo">gas-kpi-cs</th>
+          <th class="col-header repo">sprint-management</th>
+          <th class="col-header repo">claude-skills</th>
+          <th class="col-header repo">claude-config</th>
+          <th class="col-header repo">work-style-guide</th>
+          <!-- Tools -->
+          <th class="col-header tool">Linear</th>
+          <th class="col-header tool">Google Calendar</th>
+          <th class="col-header tool">WebSearch</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- 経営・戦略 -->
+        <!-- board -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- caio -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- cao -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- cfo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cmo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- coo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cpo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cro -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- cso -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- cxo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+
+        <!-- CS業務 -->
+        <!-- adoption -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cca -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cem -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- csm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill repo-sprint"></span></td>
+          <td class="cell"><span class="dot-fill repo-skills"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-gcal"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cdo -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- cxo (CS) - same row as above, skip duplicate -->
+        <!-- eas -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- em -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- onboarding -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+
+        <!-- 人事・組織 -->
+        <!-- chro -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- dkm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- es -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- iom -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- ta -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-gcal"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- wpm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill repo-workstyle"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+
+        <!-- 営業 -->
+        <!-- bsm -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-gcal"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- fsm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-gcal"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- som -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+
+        <!-- システム・TS -->
+        <!-- cto -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill repo-config"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-web"></span></td>
+        </tr>
+        <!-- engm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+        <!-- tsm -->
+        <tr class="matrix-row">
+          <td class="cell"><span class="dot-fill repo-gas"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-linear"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+
+        <!-- 個人支援 -->
+        <!-- pom -->
+        <tr class="matrix-row group-gap">
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+          <td class="cell"><span class="dot-fill tool-gcal"></span></td>
+          <td class="cell"><span class="dot-empty"></span></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Summary -->
+<div style="margin-top: 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+  <div style="background:#161b22; border:1px solid rgba(255,166,77,0.3); border-radius:8px; padding:14px;">
+    <div style="font-size:10px; color:#ffa64d; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">gas-kpi-cs 参照</div>
+    <div style="font-size:24px; font-weight:700; color:#ffa64d; margin-bottom:4px;">14</div>
+    <div style="font-size:11px; color:#8b949e;">adoption, cca, cdo, cem, cfo, cmo, coo, cro, cso, cxo, eas, onboarding, som, tsm</div>
+  </div>
+  <div style="background:#161b22; border:1px solid rgba(88,166,255,0.3); border-radius:8px; padding:14px;">
+    <div style="font-size:10px; color:#58a6ff; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Linear 参照</div>
+    <div style="font-size:24px; font-weight:700; color:#58a6ff; margin-bottom:4px;">9</div>
+    <div style="font-size:11px; color:#8b949e;">caio, cao, cca, cpo, eas, em, engm, som, tsm</div>
+  </div>
+  <div style="background:#161b22; border:1px solid rgba(52,211,153,0.3); border-radius:8px; padding:14px;">
+    <div style="font-size:10px; color:#34d399; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">Google Calendar 参照</div>
+    <div style="font-size:24px; font-weight:700; color:#34d399; margin-bottom:4px;">5</div>
+    <div style="font-size:11px; color:#8b949e;">bsm, csm, fsm, pom, ta</div>
+  </div>
+  <div style="background:#161b22; border:1px solid rgba(241,240,255,0.2); border-radius:8px; padding:14px;">
+    <div style="font-size:10px; color:#f1f0ff; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">WebSearch 使用</div>
+    <div style="font-size:24px; font-weight:700; color:#f1f0ff; margin-bottom:4px;">8</div>
+    <div style="font-size:11px; color:#8b949e;">caio, cao, cro, cso, cto, dkm, eas, wpm</div>
+  </div>
+</div>
+
+<div style="margin-top:12px; font-size:11px; color:#484f58;">
+  全役員共通: cs-ai-officers（自己定義参照）・Notion（R/W）・Slack（メッセージ送信） — マトリクスでは省略
+</div>
+
+<div style="margin-top:6px; font-size:11px; color:#484f58; text-align:right;">
+  Generated: 2026-03-25 &nbsp;|&nbsp; cs-ai-officers × seino-jpg repos
+</div>
+
+</body>
+</html>
