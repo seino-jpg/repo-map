@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>seino-jpg リポジトリマップ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #e6edf3; padding: 24px; }
+  h1 { font-size: 18px; color: #8b949e; margin-bottom: 20px; font-weight: 400; }
+  h1 span { color: #e6edf3; font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .section { border-radius: 10px; padding: 16px; border: 1px solid rgba(255,255,255,0.08); }
+  .section h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+  .repo { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 6px; margin-bottom: 4px; cursor: default; transition: background 0.15s; }
+  .repo:hover { background: rgba(255,255,255,0.05); }
+  .repo-name { font-size: 12px; font-weight: 500; color: #e6edf3; font-family: "SF Mono", "Fira Code", monospace; }
+  .repo-desc { font-size: 11px; color: #8b949e; margin-top: 2px; line-height: 1.4; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .badge.pub { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+
+  /* Color themes per section */
+  .claude-base  { background: #161b22; border-color: rgba(88,166,255,0.25); }
+  .claude-base h2 { color: #58a6ff; }
+  .claude-base .dot { background: #58a6ff; }
+
+  .recore  { background: #161b22; border-color: rgba(63,185,80,0.25); }
+  .recore h2 { color: #3fb950; }
+  .recore .dot { background: #3fb950; }
+
+  .cs-ops { background: #161b22; border-color: rgba(255,166,77,0.25); }
+  .cs-ops h2 { color: #ffa64d; }
+  .cs-ops .dot { background: #ffa64d; }
+
+  .tools { background: #161b22; border-color: rgba(188,140,255,0.25); }
+  .tools h2 { color: #bc8cff; }
+  .tools .dot { background: #bc8cff; }
+
+  .knowledge { background: #161b22; border-color: rgba(255,215,0,0.2); }
+  .knowledge h2 { color: #ffd700; }
+  .knowledge .dot { background: #ffd700; }
+
+  .external { background: #161b22; border-color: rgba(255,99,132,0.25); }
+  .external h2 { color: #ff6384; }
+  .external .dot { background: #ff6384; }
+
+  .misc { background: #161b22; border-color: rgba(110,118,129,0.3); }
+  .misc h2 { color: #6e7681; }
+  .misc .dot { background: #6e7681; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8b949e; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .count { font-size: 11px; color: #8b949e; margin-left: 6px; }
+  .updated { font-size: 10px; color: #484f58; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<h1>seino-jpg / <span>リポジトリマップ</span> <span style="color:#484f58;font-size:13px;">— 47 repos</span></h1>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Claude Code基盤</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>RECORE製品</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffa64d"></div>CS業務オペレーション</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#bc8cff"></div>ツール・Bot開発</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffd700"></div>ナレッジ・ドキュメント</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff6384"></div>外部向け・副業</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6e7681"></div>その他・バックアップ</div>
+</div>
+
+<div class="grid">
+
+  <!-- Claude Code基盤 -->
+  <div class="section claude-base">
+    <h2>Claude Code 基盤 <span class="count">11</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">claude-config</div>
+      <div class="repo-desc">設定・引継書の一元管理。ローカルパス: ~/claude-config</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">claude-skills</div>
+      <div class="repo-desc">スキル（/コマンド）管理。~/.claude-business/commands/ からコピー</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">handover</div>
+      <div class="repo-desc">Claude作業引継書の一元管理</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">claude-integrations</div>
+      <div class="repo-desc">Claude外部サービス連携設定</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">claude-code-statusline</div>
+      <div class="repo-desc">Claude Codeステータスライン（コンテキスト使用量・git情報等）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">everything-claude-code</div>
+      <div class="repo-desc">ハーネス最適化システム（スキル・メモリ・セキュリティ）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">everthing-claude-code-note</div>
+      <div class="repo-desc">業務活用まとめノート</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">harness-engineering</div>
+      <div class="repo-desc">ハーネスエンジニアリング研究・実装ノート</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">task-orchestrator</div>
+      <div class="repo-desc">自律タスク実行エージェント</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">memento-skills-research</div>
+      <div class="repo-desc">Memento-Skills論文の調査と実務応用考察</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">claude-efficiency</div>
+      <div class="repo-desc">Claude Codeセッション効率化</div>
+    </div></div>
+  </div>
+
+  <!-- RECORE製品 -->
+  <div class="section recore">
+    <h2>RECORE 製品 <span class="count">8</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-knowledge</div>
+      <div class="repo-desc">機能・業務フロー・用語・CS/TSナレッジベース。ローカル: ~/recore-knowledge</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-propose</div>
+      <div class="repo-desc">汎用提案書・提案サンプル集。ローカル: ~/recore-propose</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-propose-ululab</div>
+      <div class="repo-desc">ウルラボ（T-Mine）RECORE導入提案一式</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-pm-framework</div>
+      <div class="repo-desc">導入PJ・スプリント施策PMフレームワーク定義</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-community-portal</div>
+      <div class="repo-desc">コミュニティポータルサイト・フォーム管理</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">line-recore-research</div>
+      <div class="repo-desc">LINE × RECORE連携調査</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-knowledge-backup</div>
+      <div class="repo-desc" style="color:#484f58">recore-knowledgeバックアップ</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">tcg-master-service</div>
+      <div class="repo-desc">トレカマスターデータ提供サービス — 価格戦略・プラン設計</div>
+    </div></div>
+  </div>
+
+  <!-- CS業務オペレーション -->
+  <div class="section cs-ops">
+    <h2>CS 業務オペレーション <span class="count">10</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">cs-ai-officers</div>
+      <div class="repo-desc">AIオフィサーエージェント群（27体）。ローカル: ~/cs-ai-officers</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">gas-kpi-cs</div>
+      <div class="repo-desc">CS業務用GAS（KPI管理・解約分析）。ローカル: ~/gas-kpi-cs</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">cs-lifecycle-dashboard</div>
+      <div class="repo-desc">顧客ライフサイクルダッシュボード（GAS）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">gas-cs-meeting-prep</div>
+      <div class="repo-desc">CS週次MTG議事録自動作成GAS</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">churn-analysis</div>
+      <div class="repo-desc">解約理由の分析基盤（3層構造化）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">churn-flowchart</div>
+      <div class="repo-desc">解約フローチャート</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">member-karte</div>
+      <div class="repo-desc">CSメンバーカルテ・1on1記録</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">ops-memo-project</div>
+      <div class="repo-desc">議事録から企業ごとの運用情報を抽出→Notion集約</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">sprint-management</div>
+      <div class="repo-desc">スプリント管理ドキュメント・SOP</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">cs-ai-officers-backup</div>
+      <div class="repo-desc" style="color:#484f58">cs-ai-officersバックアップ</div>
+    </div></div>
+  </div>
+
+  <!-- ツール・Bot開発 -->
+  <div class="section tools">
+    <h2>ツール・Bot 開発 <span class="count">5</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">recore-support-bot</div>
+      <div class="repo-desc">TS向けSlack Bot（GitHub連携 + Claude API）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">slack-customer-lookup</div>
+      <div class="repo-desc">Slash Commandで顧客担当者検索Bot（GAS + Sheets）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">slide-generate</div>
+      <div class="repo-desc">スライド自動生成ツール（GAS + Claude Code スキル）</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">mcp-gdrive</div>
+      <div class="repo-desc">MCP server for Google Drive & Sheets</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">data-sources</div>
+      <div class="repo-desc">社内データソース（スプレッドシートID等）の一元管理</div>
+    </div></div>
+  </div>
+
+  <!-- ナレッジ・ドキュメント -->
+  <div class="section knowledge">
+    <h2>ナレッジ・ドキュメント <span class="count">7</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">ai-activation</div>
+      <div class="repo-desc">Claude Code AI活用オンボーディング一式</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">ai-literacy</div>
+      <div class="repo-desc">AIリテラシー・AIとの向き合い方ナレッジ</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">org-map</div>
+      <div class="repo-desc">commerceXホールディングス組織図・メンバー情報</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">work-style-guide</div>
+      <div class="repo-desc">チーム全体の仕事の進め方ガイド</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">knowledge-ops</div>
+      <div class="repo-desc">ナレッジ運用</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">tool-evaluation</div>
+      <div class="repo-desc">ITツール・AIツール選定プロセスと結果 <span class="badge pub">public</span></div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">mac-terminal-setup</div>
+      <div class="repo-desc">Mac Terminal設定（Claude Codeタブ名日本語化） <span class="badge pub">public</span></div>
+    </div></div>
+  </div>
+
+  <!-- 外部向け・副業 -->
+  <div class="section external">
+    <h2>外部向け・副業 <span class="count">4</span></h2>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">ai-consulting-sidebiz</div>
+      <div class="repo-desc">AIコンサルティング副業プロジェクト</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">r6b-recore-study</div>
+      <div class="repo-desc">R6B様向けRECOREパートナーセールス勉強会資料</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">seminar-planning</div>
+      <div class="repo-desc">セミナー企画・議事録管理</div>
+    </div></div>
+
+    <div class="repo"><div class="dot"></div><div>
+      <div class="repo-name">optimize</div>
+      <div class="repo-desc">Claude Codeセッション分析による業務最適化</div>
+    </div></div>
+  </div>
+
+  <!-- その他・一時 -->
+  <div class="section misc" style="grid-column: span 3;">
+    <h2>その他・一時置き場 <span class="count">2</span></h2>
+    <div style="display:flex; gap:16px;">
+      <div class="repo" style="flex:1"><div class="dot"></div><div>
+        <div class="repo-name">sandbox</div>
+        <div class="repo-desc">新規作業の一時置き場。作業確定後、適切なリポジトリへ移動</div>
+      </div></div>
+      <div class="repo" style="flex:1"><div class="dot"></div><div>
+        <div class="repo-name">ai-agent-sandbox-research</div>
+        <div class="repo-desc">AIエージェント調査・研究サンドボックス</div>
+      </div></div>
+      <div style="flex:1"></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px; font-size:11px; color:#484f58; text-align:right;">
+  Generated: 2026-03-25 &nbsp;|&nbsp; seino-jpg GitHub Repositories
+</div>
+
+</body>
+</html>
